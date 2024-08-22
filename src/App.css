@@ -1,0 +1,7 @@
+.App {
+  text-align: center;
+}
+
+.recharts-legend-item {
+  cursor: pointer; /* Change the cursor to a pointer when hovering */
+}
