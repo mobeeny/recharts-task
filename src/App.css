@@ -13,19 +13,4 @@
   -ms-user-select: none;     /* IE10+/Edge */
 }
 
-.btn.update {
-  padding: 8px 20px;
-  background-color: #3481ae; 
-  color: white;
-  border: none;
-  border-radius: 5px;
-  margin-top: 5px;
-  font-size: 16px;
-  text-align: right;
-  line-height: 1; 
-  float:right;
-}
 
-.btn.update:hover {
-  background-color: #1c60a0;
-}

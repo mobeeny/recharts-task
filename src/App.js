@@ -517,19 +517,16 @@ function App() {
   };
 
   return (
+
     <div
       style={{
         width: "80%",
         height: 170,
         margin: "0 auto",
-        textAlign: "center",
+        textAlign: "right",
       }}>
-      <button
-        type="button"
-        className="btn update"
-        onClick={zoomOut}>
-        Zoom Out
-      </button>
+      <button type="button" class="btn btn-primary text-end mt-1" onClick={zoomOut}>Zoom Out</button>
+      
       <br />
       {chart()}
       {chart()}
