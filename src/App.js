@@ -116,7 +116,8 @@ function App() {
 
   useEffect(() => {
     console.log("Left and Right changed:", left, right, state.brushKey);
-    returnData(left, right);
+
+    returnData(left|RANGE.start, right|RANGE.end);
   }, [left, right]);
 
   const handleBrushChange = (brushData) => {
@@ -297,10 +298,11 @@ function App() {
     </ResponsiveContainer>
   );
 
-  const barChart = (id, s1, s2) => (
+  const barChart = () => (
     <ResponsiveContainer
       width="100%"
-      height="100%">
+      height="100%"
+      className="disable-text-selection">
       <BarChart
         width={500}
         height={300}
@@ -330,7 +332,7 @@ function App() {
           yAxisId="left"
           type="number"
           allowDataOverflow
-          domain={[`bottom${s1}`, `top${s1}`]}
+          domain={[`bottom`, `top`]}
           label={{
             value: "Bitrate [Mbps]",
             angle: -90,
@@ -343,13 +345,13 @@ function App() {
           yAxisId="right"
           type="number"
           allowDataOverflow
-          domain={[`bottom${s2}`, `top${s2}`]}
+          domain={[`bottom`, `top`]}
           label={{
             value: "Latency [ms]",
             angle: 90,
             offset: -10,
             position: "insideRight",
-            dy: 20,
+            dy: 40,
           }}
           orientation="right"
         />
@@ -368,6 +370,7 @@ function App() {
             fillOpacity={activeLine && activeLine !== "Flow1" ? 0.2 : 1}
             activeDot={{ r: 8 }}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow2 && (
@@ -382,6 +385,7 @@ function App() {
             strokeWidth={activeLine === "Flow2" ? 4 : 1}
             fillOpacity={activeLine && activeLine !== "Flow2" ? 0.2 : 1}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow3 && (
@@ -396,6 +400,7 @@ function App() {
             strokeWidth={activeLine === "Flow3" ? 4 : 1}
             fillOpacity={activeLine && activeLine !== "Flow3" ? 0.2 : 1}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow4 && (
@@ -410,6 +415,7 @@ function App() {
             strokeWidth={activeLine === "Flow4" ? 4 : 1}
             fillOpacity={activeLine && activeLine !== "Flow4" ? 0.2 : 1}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow5 && (
@@ -424,6 +430,7 @@ function App() {
             strokeWidth={activeLine === "Flow5" ? 4 : 1}
             fillOpacity={activeLine && activeLine !== "Flow5" ? 0.2 : 1}
             dot={null}
+            isAnimationActive={false}
           />
         )}
 
