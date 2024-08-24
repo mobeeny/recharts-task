@@ -16,14 +16,6 @@ import {
 } from "recharts";
 import CustomLegend from "./CustomLegend";
 
-// const COLORS = {
-//   Flow_1: "#82ca9d",
-//   Flow_2: "#19AADE",
-//   Flow_3: "#8884d8",
-//   Flow_4: "#EF7E32",
-//   Flow_5: "#EB548C",
-// };
-
 const COLORS = {
   Flow_1: "#646b81",
   Flow_2: "#598cb1",
@@ -48,39 +40,10 @@ const formatTime = (seconds) => {
   )}:${String(secs).padStart(2, "0")}`;
 };
 
-function generateRandomData(numPoints) {
-  const data = [];
-
-  for (let i = 0; i < numPoints; i++) {
-    data.push({
-      // time:  Math.floor(i * (10000 / numPoints)),  // Time ranging from 0 to 10000
-      time: i,
-      Flow1: Math.floor(Math.random() * 5000) + 1000,
-      Flow2: Math.floor(Math.random() * 6000) + 1000,
-      Flow3: Math.floor(Math.random() * 7000) + 1000,
-      Flow4: Math.floor(Math.random() * 8000) + 1000,
-      Flow5: Math.floor(Math.random() * 9000) + 1000,
-    });
-  }
-
-  return data;
-}
-
-const initialData = generateRandomData(RANGE.end + 1); 
-const getAxisYDomain = (from, to, ref, offset) => {
-  const refData = initialData.slice(from, to);
-  let [bottom, top] = [refData[0][ref], refData[0][ref]];
-  refData.forEach((d) => {
-    if (d[ref] > top) top = d[ref];
-    if (d[ref] < bottom) bottom = d[ref];
-  });
-
-  return [(bottom | 0) - offset, (top | 0) + offset];
-};
-
 function App() {
   const [state, setState] = useState({
-    data: initialData,
+    data: [],
+    zoomData: [],
     left: RANGE.start,
     right: RANGE.end,
     refAreaLeft: "",
@@ -92,6 +55,7 @@ function App() {
     brushKey: false,
     animation: true,
     activeLine: null,
+    isZoom: false,
   });
 
   const {
@@ -116,7 +80,7 @@ function App() {
   const returnData = (start, stop) => {
     const ndata = [];
 
-    for (let i = start; i < stop; i++) {
+    for (let i = start; i <= stop; i++) {
       ndata.push({
         time: i,
         Flow1: Math.floor(Math.random() * 5000) + 1000,
@@ -128,18 +92,31 @@ function App() {
     }
     setState({
       ...state,
-      data: ndata,
+      data: state.data.length === 0 ? ndata : state.data,
+      zoomData: ndata,
       brushKey: !state.brushKey,
     });
   };
 
+  const getAxisYDomain = (from, to, ref, offset) => {
+    const refData = state.data.slice(from, to);
+    let [bottom, top] = [refData[0][ref], refData[0][ref]];
+    refData.forEach((d) => {
+      if (d[ref] > top) top = d[ref];
+      if (d[ref] < bottom) bottom = d[ref];
+    });
+
+    return [(bottom | 0) - offset, (top | 0) + offset];
+  };
+
+  useEffect(() => {
+    console.log("Initialized", state);
+    returnData(RANGE.start, RANGE.end + 1);
+  }, []);
+
   useEffect(() => {
     console.log("Left and Right changed:", left, right, state.brushKey);
     returnData(left, right);
-    setState({
-      ...state,
-      brushKey: !state.brushKey,
-    });
   }, [left, right]);
 
   const handleBrushChange = (brushData) => {
@@ -172,15 +149,16 @@ function App() {
     setState((prevState) => ({ ...prevState, activeLine: null }));
   };
 
-  const chart = (id, s1, s2) => (
+  const chart = () => (
     <ResponsiveContainer
       width="100%"
-      height="100%">
+      height="100%"
+      className="disable-text-selection">
       <LineChart
         width={500}
         height={300}
         syncId="sync"
-        data={data}
+        data={state.isZoom ? state.zoomData : state.data}
         onMouseDown={(e) => setState({ ...state, refAreaLeft: e.activeLabel })}
         onMouseMove={(e) =>
           refAreaLeft && setState({ ...state, refAreaRight: e.activeLabel })
@@ -224,7 +202,7 @@ function App() {
             angle: 90,
             offset: -10,
             position: "insideRight",
-            dy: 20,
+            dy: 40,
           }}
           orientation="right"
         />
@@ -243,6 +221,7 @@ function App() {
             stroke={COLORS.Flow_1}
             activeDot={{ r: 8 }}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow2 && (
@@ -257,6 +236,7 @@ function App() {
             strokeOpacity={activeLine && activeLine !== "Flow2" ? 0.5 : 1}
             stroke={COLORS.Flow_2}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow3 && (
@@ -271,6 +251,7 @@ function App() {
             strokeOpacity={activeLine && activeLine !== "Flow3" ? 0.5 : 1}
             stroke={COLORS.Flow_3}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow4 && (
@@ -285,6 +266,7 @@ function App() {
             strokeOpacity={activeLine && activeLine !== "Flow4" ? 0.5 : 1}
             stroke={COLORS.Flow_4}
             dot={null}
+            isAnimationActive={false}
           />
         )}
         {visibleFlow.Flow5 && (
@@ -299,6 +281,7 @@ function App() {
             strokeOpacity={activeLine && activeLine !== "Flow5" ? 0.5 : 1}
             stroke={COLORS.Flow_5}
             dot={null}
+            isAnimationActive={false}
           />
         )}
 
@@ -322,7 +305,7 @@ function App() {
         width={500}
         height={300}
         syncId="sync"
-        data={data}
+        data={state.isZoom ? state.zoomData : state.data}
         onMouseDown={(e) => setState({ ...state, refAreaLeft: e.activeLabel })}
         onMouseMove={(e) =>
           refAreaLeft && setState({ ...state, refAreaRight: e.activeLabel })
@@ -372,72 +355,77 @@ function App() {
         />
         <Tooltip />
 
-        {visibleFlow.Flow1 && (<Bar
-          yAxisId="left"
-          type="monotone"
-          dataKey={`Flow1`}
-          fill={COLORS.Flow_1}
-          // stroke={COLORS.Flow_1}
-          onMouseEnter={() => handleMouseEnter("Flow1")}
-          onClick={() => handleMouseEnter("Flow1")}
-          onMouseLeave={handleMouseLeave}
-          strokeWidth={activeLine === "Flow1" ? 4 : 1}
-          fillOpacity={activeLine && activeLine !== "Flow1" ? 0.2 : 1}
-          activeDot={{ r: 8 }}
-          dot={null}
-        />)}
-        {visibleFlow.Flow2 && (<Bar
-          yAxisId="right"
-          type="monotone"
-          dataKey={`Flow2`}
-          fill={COLORS.Flow_2}
-          // stroke={COLORS.Flow_2}
-          onMouseEnter={() => handleMouseEnter("Flow2")}
-          onClick={() => handleMouseEnter("Flow2")}
-          onMouseLeave={handleMouseLeave}
-          strokeWidth={activeLine === "Flow2" ? 4 : 1}
-          fillOpacity={activeLine && activeLine !== "Flow2" ? 0.2 : 1}
-          dot={null}
-        />)}
-        {visibleFlow.Flow3 && (<Bar
-          yAxisId="right"
-          type="monotone"
-          dataKey={`Flow3`}
-          fill={COLORS.Flow_3}
-          // stroke={COLORS.Flow_3}
-          onMouseEnter={() => handleMouseEnter("Flow3")}
-          onClick={() => handleMouseEnter("Flow3")}
-          onMouseLeave={handleMouseLeave}
-          strokeWidth={activeLine === "Flow3" ? 4 : 1}
-          fillOpacity={activeLine && activeLine !== "Flow3" ? 0.2 : 1}
-          dot={null}
-        />)}
-        {visibleFlow.Flow4 && (<Bar
-          yAxisId="right"
-          type="monotone"
-          dataKey={`Flow4`}
-          fill={COLORS.Flow_4}
-          // stroke={COLORS.Flow_4}
-          onMouseEnter={() => handleMouseEnter("Flow4")}
-          onClick={() => handleMouseEnter("Flow4")}
-          onMouseLeave={handleMouseLeave}
-          strokeWidth={activeLine === "Flow4" ? 4 : 1}
-          fillOpacity={activeLine && activeLine !== "Flow4" ? 0.2 : 1}
-          dot={null}
-        />)}
-        {visibleFlow.Flow5 && (<Bar
-          yAxisId="right"
-          type="monotone"
-          dataKey={`Flow5`}
-          fill={COLORS.Flow_5}
-          // stroke={COLORS.Flow_5}
-          onMouseEnter={() => handleMouseEnter("Flow5")}
-          onClick={() => handleMouseEnter("Flow5")}
-          onMouseLeave={handleMouseLeave}
-          strokeWidth={activeLine === "Flow5" ? 4 : 1}
-          fillOpacity={activeLine && activeLine !== "Flow5" ? 0.2 : 1}
-          dot={null}
-        />)}
+        {visibleFlow.Flow1 && (
+          <Bar
+            yAxisId="left"
+            type="monotone"
+            dataKey={`Flow1`}
+            fill={COLORS.Flow_1}
+            onMouseEnter={() => handleMouseEnter("Flow1")}
+            onClick={() => handleMouseEnter("Flow1")}
+            onMouseLeave={handleMouseLeave}
+            strokeWidth={activeLine === "Flow1" ? 4 : 1}
+            fillOpacity={activeLine && activeLine !== "Flow1" ? 0.2 : 1}
+            activeDot={{ r: 8 }}
+            dot={null}
+          />
+        )}
+        {visibleFlow.Flow2 && (
+          <Bar
+            yAxisId="right"
+            type="monotone"
+            dataKey={`Flow2`}
+            fill={COLORS.Flow_2}
+            onMouseEnter={() => handleMouseEnter("Flow2")}
+            onClick={() => handleMouseEnter("Flow2")}
+            onMouseLeave={handleMouseLeave}
+            strokeWidth={activeLine === "Flow2" ? 4 : 1}
+            fillOpacity={activeLine && activeLine !== "Flow2" ? 0.2 : 1}
+            dot={null}
+          />
+        )}
+        {visibleFlow.Flow3 && (
+          <Bar
+            yAxisId="right"
+            type="monotone"
+            dataKey={`Flow3`}
+            fill={COLORS.Flow_3}
+            onMouseEnter={() => handleMouseEnter("Flow3")}
+            onClick={() => handleMouseEnter("Flow3")}
+            onMouseLeave={handleMouseLeave}
+            strokeWidth={activeLine === "Flow3" ? 4 : 1}
+            fillOpacity={activeLine && activeLine !== "Flow3" ? 0.2 : 1}
+            dot={null}
+          />
+        )}
+        {visibleFlow.Flow4 && (
+          <Bar
+            yAxisId="right"
+            type="monotone"
+            dataKey={`Flow4`}
+            fill={COLORS.Flow_4}
+            onMouseEnter={() => handleMouseEnter("Flow4")}
+            onClick={() => handleMouseEnter("Flow4")}
+            onMouseLeave={handleMouseLeave}
+            strokeWidth={activeLine === "Flow4" ? 4 : 1}
+            fillOpacity={activeLine && activeLine !== "Flow4" ? 0.2 : 1}
+            dot={null}
+          />
+        )}
+        {visibleFlow.Flow5 && (
+          <Bar
+            yAxisId="right"
+            type="monotone"
+            dataKey={`Flow5`}
+            fill={COLORS.Flow_5}
+            onMouseEnter={() => handleMouseEnter("Flow5")}
+            onClick={() => handleMouseEnter("Flow5")}
+            onMouseLeave={handleMouseLeave}
+            strokeWidth={activeLine === "Flow5" ? 4 : 1}
+            fillOpacity={activeLine && activeLine !== "Flow5" ? 0.2 : 1}
+            dot={null}
+          />
+        )}
 
         {refAreaLeft && refAreaRight ? (
           <ReferenceArea
@@ -463,10 +451,15 @@ function App() {
       return;
     }
 
+    setState((prevState) => ({
+      ...prevState,
+      isZoom: true,
+    }));
+
     if (refAreaLeft > refAreaRight)
       [refAreaLeft, refAreaRight] = [refAreaRight, refAreaLeft];
 
-    const [bottom1, top1] = getAxisYDomain(
+    const [bottom, top] = getAxisYDomain(
       refAreaLeft,
       refAreaRight,
       "Flow1",
@@ -478,24 +471,7 @@ function App() {
       "Flow2",
       200
     );
-    const [bottom3, top3] = getAxisYDomain(
-      refAreaLeft,
-      refAreaRight,
-      "Flow3",
-      200
-    );
-    const [bottom4, top4] = getAxisYDomain(
-      refAreaLeft,
-      refAreaRight,
-      "Flow4",
-      200
-    );
-    const [bottom5, top5] = getAxisYDomain(
-      refAreaLeft,
-      refAreaRight,
-      "Flow5",
-      200
-    );
+    
 
     setState((prevState) => ({
       ...prevState,
@@ -514,7 +490,6 @@ function App() {
   const zoomOut = () => {
     setState((prevState) => ({
       ...prevState,
-      data: initialData,
       refAreaLeft: "",
       refAreaRight: "",
       left: RANGE.start,
@@ -524,6 +499,7 @@ function App() {
       top2: "dataMax+50",
       bottom2: "dataMin+50",
       brushKey: !state.brushKey,
+      isZoom: false,
     }));
   };
 
@@ -555,11 +531,11 @@ function App() {
         Zoom Out
       </button>
       <br />
-      {chart(1, 1, 5)}
-      {chart(2, 2, 4)}
-      {chart(3, 3, 4)}
-      {chart(4, 4, 2)}
-      {barChart(5, 5, 1)}
+      {chart()}
+      {chart()}
+      {chart()}
+      {chart()}
+      {barChart()}
 
       <ResponsiveContainer
         width="100%"
