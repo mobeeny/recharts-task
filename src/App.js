@@ -117,7 +117,11 @@ function App() {
   useEffect(() => {
     console.log("Left and Right changed:", left, right, state.brushKey);
 
-    returnData(left|RANGE.start, right|RANGE.end);
+    if ((left | RANGE.start) < (right | RANGE.end)) {
+      returnData(left | RANGE.start, right | RANGE.end);
+    } else {
+      zoomOut()
+    }
   }, [left, right]);
 
   const handleBrushChange = (brushData) => {
@@ -478,7 +482,6 @@ function App() {
       "Flow2",
       200
     );
-    
 
     setState((prevState) => ({
       ...prevState,
@@ -524,7 +527,6 @@ function App() {
   };
 
   return (
-
     <div
       style={{
         width: "80%",
@@ -532,8 +534,13 @@ function App() {
         margin: "0 auto",
         textAlign: "right",
       }}>
-      <button type="button" class="btn btn-primary text-end mt-1" onClick={zoomOut}>Zoom Out</button>
-      
+      <button
+        type="button"
+        class="btn btn-primary text-end mt-1"
+        onClick={zoomOut}>
+        Zoom Out
+      </button>
+
       <br />
       {chart()}
       {chart()}
